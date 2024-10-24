@@ -1,0 +1,53 @@
+- name: UPDATE
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: get updates
+      command: apt update
+
+- name: CURL
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: APT INSTALL CURL
+      package:
+        name: curl
+        state: present
+    - name: APT INSTALL CA-CERTIFICATES
+      package:
+        name: ca-certificates
+        state: present
+
+- name: INSTALL POSTGRES REPO
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: INSTALL PGDG
+      command: install -d /usr/share/postgresql-common/pgdg
+    - name: DOWNLOAD ASC
+      command: curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    - name: ADD SOURCE
+      command: sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+
+- name: UPDATE
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: get updates
+      command: apt update
+
+- name: POSTGRESQL-16
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: APT INSTALL POSTGRESQL-{{ hostvars[inventory_hostname]['PG_VERSION'] }}
+      package:
+        name: postgresql-{{ hostvars[inventory_hostname]['PG_VERSION'] }}
+        state: present
+
+- name: START POSTGRES
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: SYSTEMCTL START POSTGRESQL
+      command: systemctl start postgresql
